@@ -12,9 +12,9 @@
   <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Package</label>
   <select class="custom-select my-1 mr-sm-2" id="inlineFormCustomSelectPref" name="package" required>
     <option value="" selected>Choose Package</option>
-    <option value="p1">5000 BTT</option>
-    <option value="p2">10000 BTT</option>
-    <option value="p3">20000 BTT</option>
+    <option value="p1">P1(5000): <%= 5000-user.amtinvt>0 ? 5000-user.amtinvt+' BTT':'Already active' %></option>
+    <option value="p2">P2(10000) : <%= 10000-user.amtinvt>0 ? 10000-user.amtinvt+' BTT':'Already active' %> </option>
+    <option value="p3">P3(20000) : <%= 20000-user.amtinvt>0 ? 20000-user.amtinvt+' BTT':'Already active' %></option>
     <input type="text" class="referrers" name="referrers">
   </select>
 
@@ -28,11 +28,13 @@
 	var o = <%- user.referrer?JSON.stringify(user.referrer) : 'No referrer' %>
 	var html=[]
 	var arr=[]
+  var ina=0;
 	const iterate = (obj) => {
     Object.keys(obj).forEach(key => {
     	if(key=="name"){
    			 console.log(`${key} : ${obj[key]}`)
    			 html.push(`<p>${key} : ${obj[key]}</p>`)
+         ina+=1;
     	}else if (key=='_id') {
     		arr.push(obj[key])
     	}
@@ -42,7 +44,7 @@
             iterate(obj[key])
         }
     })
-    document.querySelector('.boxx').innerHTML=html.join('')
+    document.querySelector('.boxx').innerHTML='Referer Count :'+ina+html.join('')
     document.querySelector('.referrers').value=JSON.stringify(arr)
 
 }

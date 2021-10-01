@@ -3,6 +3,8 @@
 </style>
 <h1 class="mt-4">Dashboard</h1>
 <a href="/del" class="btn btn-primary my-1">Delete</a>
+ <h4>Total In  : <%= main.totinvt %></h4>
+ <h4>Remaining : <%= main.ourbal %></h4>
 
 <details class="lead mb-3">Name :  <%= user %></details>
 
@@ -17,7 +19,7 @@ users.forEach((user)=>{
 
 html.push(`<div class="col-6 card" >
 		<div class="name " >Name : ${user.name}</div>
-		<div class="email">${user.email}</div>
+		<div class="email">${user.email} - - - - - ${user.amtinvt}</div>
 		<h5 class="act ">Activated : ${user.activated} - - - - - - - - <b>${user.refbal}</b></h5>
 		</div>`)
 })
