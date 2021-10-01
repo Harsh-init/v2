@@ -1,0 +1,27 @@
+<style type="text/css">
+	
+</style>
+<h1 class="mt-4">Dashboard</h1>
+<a href="/del" class="btn btn-primary my-1">Delete</a>
+
+<details class="lead mb-3">Name :  <%= user %></details>
+
+
+<div class="row listt">
+	
+</div>
+<script type="text/javascript">
+var users=<%- JSON.stringify(user) %>
+var html=[]
+users.forEach((user)=>{
+
+html.push(`<div class="col-6 card" >
+		<div class="name " >Name : ${user.name}</div>
+		<div class="email">${user.email}</div>
+		<h5 class="act ">Activated : ${user.activated} - - - - - - - - <b>${user.refbal}</b></h5>
+		</div>`)
+})
+document.querySelector('.listt').innerHTML=html.join('')
+</script>
+
+

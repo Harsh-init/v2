@@ -14,10 +14,13 @@ router.get('/register', forwardAuthenticated, (req, res) => res.render('register
 
 // Register
 router.post('/register', (req, res) => {
-  const { name, email, password, password2 } = req.body;
-  let errors = [];
 
-  if (!name || !email || !password || !password2) {
+
+  const { name, email,referalcode, password, password2 } = req.body;
+  let errors = [];
+  console.log(referalcode)
+  console.dir(name)
+  if (!name || !email || !password || !password2 || !referalcode) {
     errors.push({ msg: 'Please enter all fields' });
   }
 
@@ -25,6 +28,7 @@ router.post('/register', (req, res) => {
     errors.push({ msg: 'Passwords do not match' });
   }
 
+ 
   if (password.length < 6) {
     errors.push({ msg: 'Password must be at least 6 characters' });
   }
@@ -34,6 +38,7 @@ router.post('/register', (req, res) => {
       errors,
       name,
       email,
+      referalcode,
       password,
       password2
     });
@@ -45,44 +50,72 @@ router.post('/register', (req, res) => {
           errors,
           name,
           email,
+          referalcode,
           password,
           password2
         });
       } else {
-        const newUser = new User({
-          name,
-          email,
-          password
-        });
+          User.findOne({ referalcode: referalcode }).then(user => {
+        if (user || referalcode=='none') {
+         
+             const newUser = new User({
+              name,
+              email,
+              password
+            });
+             if (referalcode == "none") {
+               
+             } else {
+             newUser.referrer=user._id 
+             }
+              
+            bcrypt.genSalt(10, (err, salt) => {
+              bcrypt.hash(newUser.password, salt, (err, hash) => {
+                if (err) throw err;
+                newUser.password = hash;
 
-        bcrypt.genSalt(10, (err, salt) => {
-          bcrypt.hash(newUser.password, salt, (err, hash) => {
-            if (err) throw err;
-            newUser.password = hash;
-            newUser
-              .save()
-              .then(user => {
-                req.flash(
-                  'success_msg',
-                  'You are now registered and can log in'
-                );
-                res.redirect('/users/login');
-              })
-              .catch(err => console.log(err));
+                console.log(newUser)
+                newUser
+                  .save()
+                  .then(user => {
+                    req.flash(
+                      'success_msg',
+                      'You are now registered and can log in'
+                    );
+                    res.redirect('/users/login');
+                  })
+                  .catch(err => console.log(err));
+              });
+            });
+
+        } else {
+           errors.push({ msg: 'Invalid Referal code' });
+            res.render('register', {
+            errors,
+            name,
+            email,
+            referalcode,
+            password,
+            password2
           });
-        });
-      }
+        }
+        })
+      } // else end here 
     });
   }
+
 });
 
 // Login
 router.post('/login', (req, res, next) => {
+
+
   passport.authenticate('local', {
     successRedirect: '/dashboard',
     failureRedirect: '/users/login',
     failureFlash: true
   })(req, res, next);
+
 });
 
 // Logout
@@ -91,5 +124,6 @@ router.get('/logout', (req, res) => {
   req.flash('success_msg', 'You are logged out');
   res.redirect('/users/login');
 });
+
 
 module.exports = router;

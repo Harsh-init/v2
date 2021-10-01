@@ -3,7 +3,7 @@
     <div class="card card-body">
       <h1 class="text-center mb-3"><i class="fas fa-sign-in-alt"></i>  Login</h1>
       <% include ./partials/messages %>
-      <form action="/users/login" method="POST">
+      <form onsubmit="formSubmit(event)" action="/users/login" method="POST">
         <div class="form-group">
           <label for="email">Email</label>
           <input
@@ -32,3 +32,9 @@
     </div>
   </div>
 </div>
+<script>
+  function formSubmit(e){
+   
+
+  }
+</script>

@@ -1,3 +1,51 @@
 <h1 class="mt-4">Dashboard</h1>
-<p class="lead mb-3">Welcome <%= user.name %></p>
+<p class="lead mb-3">Name :  <%= user.name %></p>
+<p class="lead mb-3">Referrer :  <%= user.referrer?user.referrer : 'No referrer' %></p>
+
+<p class="lead mb-3">ID Activated :  <%= user.activated %></p>
+<p class="lead mb-3">Amount Invested :  <%= user.amtinvt %></p>
+
+<p class="lead mb-3">Refcode:  <%= user.referalcode || 'Activate ID to get Referal code' %></p>
+<p class="lead mb-3">Packages :  <%= user.packages %></p>
+
+<form class="form-inline" action="/users/package" method="POST">
+  <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Package</label>
+  <select class="custom-select my-1 mr-sm-2" id="inlineFormCustomSelectPref" name="package" required>
+    <option value="" selected>Choose Package</option>
+    <option value="p1">5000 BTT</option>
+    <option value="p2">10000 BTT</option>
+    <option value="p3">20000 BTT</option>
+    <input type="text" class="referrers" name="referrers">
+  </select>
+
+ 
+
+  <button type="submit" class="btn btn-primary my-1">Submit</button>
+</form>
 <a href="/users/logout" class="btn btn-secondary">Logout</a>
+<div class="boxx"></div>
+<script>
+	var o = <%- user.referrer?JSON.stringify(user.referrer) : 'No referrer' %>
+	var html=[]
+	var arr=[]
+	const iterate = (obj) => {
+    Object.keys(obj).forEach(key => {
+    	if(key=="name"){
+   			 console.log(`${key} : ${obj[key]}`)
+   			 html.push(`<p>${key} : ${obj[key]}</p>`)
+    	}else if (key=='_id') {
+    		arr.push(obj[key])
+    	}
+    
+
+    if (typeof obj[key] === 'object') {
+            iterate(obj[key])
+        }
+    })
+    document.querySelector('.boxx').innerHTML=html.join('')
+    document.querySelector('.referrers').value=JSON.stringify(arr)
+
+}
+iterate(o)
+
+</script>
