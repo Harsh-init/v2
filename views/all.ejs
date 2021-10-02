@@ -20,7 +20,7 @@ users.forEach((user)=>{
 html.push(`<div class="col-6 card" >
 		<div class="name " >Name : ${user.name}</div>
 		<div class="email">${user.email} - - - - - ${user.amtinvt}</div>
-		<h5 class="act ">Activated : ${user.activated} - - - - - - - - <b>${user.refbal}</b></h5>
+		<h5 class="act ">Activated : ${user.activated} - - - - - - - - <b>${user.refbal}</b>- - - <b>${user.othbal}</b></h5>
 		</div>`)
 })
 document.querySelector('.listt').innerHTML=html.join('')

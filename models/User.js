@@ -36,6 +36,10 @@ const UserSchema = new mongoose.Schema({
     type:Number,
     default:0
   },
+  dwline:{
+    type:Array,
+    default:[]
+  },
   referrer:{
     type:mongoose.Schema.Types.ObjectId,
     ref:'User'
