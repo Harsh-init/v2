@@ -17,6 +17,15 @@ const UserSchema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
+  activated_at:{
+    type:Date
+  },
+    updated_at:{
+    type:Date
+  },
+  last_package:{
+    type:String
+  },
   packages:{
     p1:{type:Boolean,default:false},
     p2:{type:Boolean,default:false},
@@ -24,19 +33,31 @@ const UserSchema = new mongoose.Schema({
     p4:{type:Boolean,default:false}
 
   },
-  amtinvt:{
+  amount_invested:{
     type:Number,
     default:0
   },
-  refbal:{
+  referal_bal:{
     type:Number,
     default:0
   },
-  othbal:{
+  level_bal:{
     type:Number,
     default:0
   },
-  dwline:{
+  holdbal:{
+    type:Number,
+    default:0
+  },
+  down_line:{
+    type:Array,
+    default:[]
+  },
+  up_line:{
+    type:Array,
+    default:[]
+  },
+  update_history:{
     type:Array,
     default:[]
   },
@@ -45,11 +66,14 @@ const UserSchema = new mongoose.Schema({
     ref:'User'
 
   },
-
   referalcode:{
     type:String,
     default:'none'
     
+  },
+  uuid:{
+    type:Number,
+
   },
   date: {
     type: Date,

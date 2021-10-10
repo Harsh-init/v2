@@ -20,15 +20,12 @@ router.get('/a',(req,res)=>{
 	
 })
 
-router.get('/t',(req,res)=>{
-  User.find({activated:true},{},{sort:{_id:-1},limit:2},function(err,users){
-    if (err) {
-     console.log(err)
-    } else {
-    res.send(users)
+router.get('/t',async(req,res)=>{
 
-    }
-  })
+  let a=await User.find({date: {$gt: 1633873177675}})
+  .sort({date:-1})
+  .limit(30)
+  res.send(a)
 
 })
 router.get('/g',async(req,res)=>{
@@ -64,6 +61,112 @@ router.get('/dashboard', ensureAuthenticated, (req, res) =>{
   })
 });
 
+router.post('/users/package', ensureAuthenticated, async(req, res) => {
+  if(!req.body.package){
+    return res.send("No Package Send")
+  }
+  // Verifying User Package
+  const {package} = req.body; 
+  const selectedPackage = package;
+  const packages = {
+      p1: 5000,
+      p2: 10000,
+      p3: 20000,
+      p4: 50000,
+      p5: 100000,
+      p6: 150000,
+      p7: 200000,
+  }
+
+  const package_price = packages[package];
+  if (typeof package_price == 'undefined') {
+    return res.send("Package invalid ")
+  }
+  if (req.user.amount_invested >= sPackage) {
+    return res.send('This package seems already activated')
+  }
+  // End Of Verifying User Package
+
+
+  // Get referrers array 
+  let referrers = []
+  const iterate = (obj) => {
+    Object.keys(obj).forEach(key => {
+      console.log(key)
+      if (key == '_id') {
+        referrers.push(obj[key])
+      }
+      if (typeof obj[key] === 'object') {
+        iterate(obj[key])
+      }
+    })
+  }
+  if (req.user.referrer) {
+    iterate(JSON.parse(JSON.stringify(req.user.referrer)))
+  }
+  // End Of Referres array
+
+  // = = = = = = = INCOME 1 ( Referal ) = = = = = = = = = 
+  // Creating referal updates for Bulk write 
+  let package_topay = package_price - req.user.amount_invested
+  // If user Alreay have a package than minus it from package 
+  let refpct = [25, 5, 3, 2, 2, 2, 1, 1, 0.5, 0.5]
+  // Refferal percentage 
+  let refupdates = []
+  referrers.forEach((ref, i) => {
+    let refup = {
+      updateOne: {
+        filter: {
+          _id: ref
+        },
+        update: {
+          $inc: {
+            referal_bal: refpct[i] / 100 * package_topay
+          }
+        }
+      }
+    }
+    refupdates.push(refup)
+  });
+  // End of  = = = = = INCOME 1 ( Referal ) - - - - - - - 
+
+  if(req.user.activated){
+    console.log('Updating')
+
+  }else{
+    nonActivated(req.user)
+  }
+
+
+})
+
+function findup30(user){
+  User.find({activated_at: {$lt: user.activated_at}})
+  .sort({activated_at:-1})
+  .limit(30)
+}
+
+
+function nonActivated(user,selectedPackage,package_topay){
+  let  tref = user.name.substring(0, 3).toLowerCase() + Math.floor(1000 + Math.random() * 9000)
+  let temp2 = {
+    updateOne: {
+          filter: {
+            _id: user._id
+          },
+          update: {
+            activated: true,
+            activated_at: Date.now(),
+            referalcode: tref,
+            amount_invested: user.amount_invested + package_topay,
+            packages: {
+                [selectedPackage]: true
+              }
+          }
+    }
+  }
+}
+
 router.post('/users/package', ensureAuthenticated, (req, res) => {
   const {
     activated,
@@ -80,9 +183,7 @@ router.post('/users/package', ensureAuthenticated, (req, res) => {
     date
   }
   // check if payement received 
-  const {
-    package
-  } = req.body;
+  const {package} = req.body;
 
   let referrers = []
   const iterate = (obj) => {
@@ -98,7 +199,6 @@ router.post('/users/package', ensureAuthenticated, (req, res) => {
   }
   if (req.user.referrer) {
     iterate(JSON.parse(JSON.stringify(req.user.referrer)))
-
   }
 
   const selectedPackage = package;
@@ -285,6 +385,26 @@ router.post('/users/package', ensureAuthenticated, (req, res) => {
 
   }
 })
+
+function updateMain(req,res){
+
+  Main.updateOne({ _id: '61577f0896f1bec93e500717'}, {
+      $inc: {
+        totinvt: rPac,
+        ourbal: osd
+      }
+    },function(err, resp) {
+      if (err) {
+        console.log(err)
+      } else {
+        console.log(resp)
+        console.log('data update', updata)
+        res.send('Activated your id' + updata.referalcode + ' and  selected package ' + sPackage)
+      }
+    })
+}
+
+
 module.exports = router;
 //
 
