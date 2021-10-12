@@ -20,14 +20,24 @@ router.get('/a',(req,res)=>{
 	
 })
 
-router.get('/t',async(req,res)=>{
-
-  let a=await User.find({date: {$gt: 1633873177675}})
-  .sort({date:-1})
-  .limit(30)
-  res.send(a)
+router.get('/t',ensureAuthenticated, async(req,res)=>{
+    res.send(req.user)
+  // let a=await User.find({date: {$gt: 1633873177675}})
+  // .sort({date:-1})
+  // .limit(30)
+  // res.send(a)
 
 })
+router.get('/h',ensureAuthenticated, async(req,res)=>{
+  let a=[]
+  a.push(nonActivated(req.user,'p3',5000))
+  User.bulkWrite(a).then(reso => {
+                  console.log(reso)
+                })
+  res.send('done')
+})
+
+
 router.get('/g',async(req,res)=>{
   const newMain= new Main({
     name:'Main-development',
@@ -69,20 +79,20 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
   const {package} = req.body; 
   const selectedPackage = package;
   const packages = {
-      p1: 5000,
-      p2: 10000,
-      p3: 20000,
-      p4: 50000,
-      p5: 100000,
-      p6: 150000,
-      p7: 200000,
+      p1: {price:5000,  reach:{up:8,down:10}},
+      p2: {price:10000, reach:{up:10,down:12}},
+      p3: {price:20000, reach:{up:15,down:20}},
+      p4: {price:50000, reach:{up:20,down:30}},
+      p5: {price:100000,reach:{up:20,down:30}},
+      p6: {price:150000,reach:{up:20,down:30}},
+      p7: {price:200000,reach:{up:20,down:30}},
   }
-
-  const package_price = packages[package];
+  const package_reach=packages[package].reach
+  const package_price = packages[package].price;
   if (typeof package_price == 'undefined') {
     return res.send("Package invalid ")
   }
-  if (req.user.amount_invested >= sPackage) {
+  if (req.user.amount_invested >= package_price) {
     return res.send('This package seems already activated')
   }
   // End Of Verifying User Package
@@ -105,15 +115,20 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
     iterate(JSON.parse(JSON.stringify(req.user.referrer)))
   }
   // End Of Referres array
+  //
+    let bulkUpdates=[]
 
+  //
   // = = = = = = = INCOME 1 ( Referal ) = = = = = = = = = 
   // Creating referal updates for Bulk write 
   let package_topay = package_price - req.user.amount_invested
   // If user Alreay have a package than minus it from package 
   let refpct = [25, 5, 3, 2, 2, 2, 1, 1, 0.5, 0.5]
   // Refferal percentage 
-  let refupdates = []
+  let refUpdates = []
   referrers.forEach((ref, i) => {
+    let team ="active_team."+i
+    let share=refpct[i] / 100 * package_topay
     let refup = {
       updateOne: {
         filter: {
@@ -121,34 +136,53 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
         },
         update: {
           $inc: {
-            referal_bal: refpct[i] / 100 * package_topay
+            referal_inc: share,
+            total_inc:share,
+            total_bal:share
+          },
+          $push: {
+            [team]:{
+              name:req.user.name,
+              idu:req.user._id,
+              income:share,
+              ref_id:req.user.referrer._id
+
+            }
           }
         }
       }
     }
-    refupdates.push(refup)
+    refUpdates.push(refup)
   });
+  bulkUpdates.push(...refUpdates)
+     // putting referal updates in array for bulk operation
   // End of  = = = = = INCOME 1 ( Referal ) - - - - - - - 
 
   if(req.user.activated){
     console.log('Updating')
 
   }else{
-    nonActivated(req.user)
+   let userUpdate=nonActivated(req.user,selectedPackage,package_topay,package_reach);
+   bulkUpdates.push(userUpdate)
+   console.log(bulkUpdates)
+
+   res.send(await User.bulkWrite(bulkUpdates))
   }
 
 
 })
 
-function findup30(user){
-  User.find({activated_at: {$lt: user.activated_at}})
+async function findup30(user){
+  return await User.find({activated_at: {$lt: user.activated_at}})
   .sort({activated_at:-1})
   .limit(30)
 }
 
 
-function nonActivated(user,selectedPackage,package_topay){
+function nonActivated(user,selectedPackage,package_topay,package_reach){
   let  tref = user.name.substring(0, 3).toLowerCase() + Math.floor(1000 + Math.random() * 9000)
+  let dot = 'packages.'+selectedPackage
+
   let temp2 = {
     updateOne: {
           filter: {
@@ -159,15 +193,21 @@ function nonActivated(user,selectedPackage,package_topay){
             activated_at: Date.now(),
             referalcode: tref,
             amount_invested: user.amount_invested + package_topay,
-            packages: {
-                [selectedPackage]: true
-              }
+            reach:{
+              up:package_reach.up ,
+              down:package_reach.down
+            } ,
+            last_package:selectedPackage,
+            [dot]: true
           }
     }
   }
+
+  console.log(JSON.stringify(temp2))
+  return temp2
 }
 
-router.post('/users/package', ensureAuthenticated, (req, res) => {
+router.post('/users/packag', ensureAuthenticated, (req, res) => {
   const {
     activated,
     name,

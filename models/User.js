@@ -37,11 +37,23 @@ const UserSchema = new mongoose.Schema({
     type:Number,
     default:0
   },
-  referal_bal:{
+  referal_inc:{
+     type:Number,
+      default:0
+  },
+  upline_inc:{
     type:Number,
     default:0
   },
-  level_bal:{
+    downline_inc:{
+    type:Number,
+    default:0
+  },
+    total_inc:{
+    type:Number,
+    default:0
+  },
+    total_bal:{
     type:Number,
     default:0
   },
@@ -57,6 +69,11 @@ const UserSchema = new mongoose.Schema({
     type:Array,
     default:[]
   },
+  active_team:{
+    type:Array,
+    default:[[],[],[],[],[],[],[],[],[],[]]
+  },
+  
   update_history:{
     type:Array,
     default:[]
@@ -70,6 +87,10 @@ const UserSchema = new mongoose.Schema({
     type:String,
     default:'none'
     
+  },
+  reach:{
+    up:{type:Number,default:0},
+    down:{type:Number,default:0},
   },
   uuid:{
     type:Number,

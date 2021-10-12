@@ -24,6 +24,7 @@
 </form>
 <a href="/users/logout" class="btn btn-secondary">Logout</a>
 <div class="boxx"></div>
+<details><%= JSON.stringify(user) %></details>
 <script>
 	var o = <%- user.referrer?JSON.stringify(user.referrer) : 'No referrer' %>
 	var html=[]
