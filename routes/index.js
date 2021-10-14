@@ -5,6 +5,8 @@ const { ensureAuthenticated, forwardAuthenticated } = require('../config/auth');
 const User = require('../models/User');
 const Main = require('../models/Main');
 
+// uuid
+
 // Welcome Page
 router.get('/', forwardAuthenticated, (req, res) => res.render('welcome'));
 
@@ -21,7 +23,9 @@ router.get('/a',(req,res)=>{
 })
 
 router.get('/t',ensureAuthenticated, async(req,res)=>{
-    res.send(req.user)
+    res.send(await User.find({activated_at: {$lt: req.user.activated_at}})
+  .sort({activated_at:-1})
+  .limit(30))
   // let a=await User.find({date: {$gt: 1633873177675}})
   // .sort({date:-1})
   // .limit(30)
@@ -119,7 +123,7 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
     let bulkUpdates=[]
 
   //
-  // = = = = = = = INCOME 1 ( Referal ) = = = = = = = = = 
+  // = = = = = = = DISTRIBUTION 1 ( Referal / 42% ) = = = = = = = = = 
   // Creating referal updates for Bulk write 
   let package_topay = package_price - req.user.amount_invested
   // If user Alreay have a package than minus it from package 
@@ -143,9 +147,12 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
           $push: {
             [team]:{
               name:req.user.name,
+              uuid:req.user.uuid,
               idu:req.user._id,
               income:share,
-              ref_id:req.user.referrer._id
+              ref_id:req.user.referrer._id,
+              extra: "index:"+i+"/s:"+selectedPackage+package_topay,
+              times:Date.now()
 
             }
           }
@@ -156,7 +163,7 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
   });
   bulkUpdates.push(...refUpdates)
      // putting referal updates in array for bulk operation
-  // End of  = = = = = INCOME 1 ( Referal ) - - - - - - - 
+  // End of  = = = = = DISTRIBUTION 1 ( Referal /42% ) - - - - - - - 
 
   if(req.user.activated){
     console.log('Updating')
@@ -164,6 +171,11 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
   }else{
    let userUpdate=nonActivated(req.user,selectedPackage,package_topay,package_reach);
    bulkUpdates.push(userUpdate)
+
+   let uplineUpdates=await findup30(req.user,selectedPackage,package_topay,package_reach)
+   console.log(uplineUpdates)
+   bulkUpdates.push(...uplineUpdates)
+
    console.log(bulkUpdates)
 
    res.send(await User.bulkWrite(bulkUpdates))
@@ -172,15 +184,82 @@ router.post('/users/package', ensureAuthenticated, async(req, res) => {
 
 })
 
-async function findup30(user){
-  return await User.find({activated_at: {$lt: user.activated_at}})
+async function findup30(user,selectedPackage,package_topay,package_reach){
+  let up30= await User.find({activated:true})
   .sort({activated_at:-1})
   .limit(30)
+
+  console.log('---- -  -  found up30 ', up30)
+  let uplineUpdates=[]
+  up30.forEach((upuser,index) =>{
+      console.log('inside for each --  - ')
+      // first 22 user get 1% sahre other gets 0.5% 
+      // because in javascript index start from 0 , so we put =(equal sign) 
+      let sharepct = index >= 22 ? 0.5 : 1
+      let share = sharepct / 100 * package_topay 
+
+      let up_update = {
+        updateOne: {
+          filter: {
+            _id: upuser._id
+          },
+          update: {
+            $inc: {
+              downline_inc: share ,
+              total_inc: share ,
+              total_bal: share 
+            },
+            $push: {
+              down_line: {
+                name: user.name,
+                uuid: user.uuid,
+                idu:  user._id,
+                income: share,
+                extra: "index:"+index+"/reach:"+upser.reach.down+"s:"+selectedPackage+package_topay,
+                
+                times:Date.now()
+              }
+            }
+          }
+        }
+      }
+      // checking if user is eligible for share with its reach power
+      // going to check its down power for this method 
+      if (upuser.reach.down <= index) {
+        // changeit if not eligible
+        let cantget_update={ updateOne: {filter: {_id: upuser._id},
+          update: {
+            $inc: {
+              cantget_inc: share ,
+            },
+            $push: {
+              cantget_history: {
+                name: user.name,
+                uuid: user.uuid,
+                idu:  user._id,
+                income: share,
+                extra: "index:"+index+"/reach:"+upser.reach.down+"s:"+selectedPackage+package_topay,
+                times:Date.now()
+              }
+            }
+          }
+        }}
+        uplineUpdates.push(cantget_update)
+      }else{
+
+      uplineUpdates.push(up_update)
+
+      }
+
+  });
+  console.log(' pushing updates ',uplineUpdates)
+  return uplineUpdates
 }
 
 
 function nonActivated(user,selectedPackage,package_topay,package_reach){
   let  tref = user.name.substring(0, 3).toLowerCase() + Math.floor(1000 + Math.random() * 9000)
+
   let dot = 'packages.'+selectedPackage
 
   let temp2 = {

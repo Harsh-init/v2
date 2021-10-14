@@ -78,6 +78,14 @@ const UserSchema = new mongoose.Schema({
     type:Array,
     default:[]
   },
+    cantget_inc:{
+    type:Number,
+    default:0
+  },
+  cantget_history:{
+    type:Array,
+    default:[]
+  },
   referrer:{
     type:mongoose.Schema.Types.ObjectId,
     ref:'User'
@@ -93,8 +101,8 @@ const UserSchema = new mongoose.Schema({
     down:{type:Number,default:0},
   },
   uuid:{
-    type:Number,
-
+    type:String,
+    unique:true
   },
   date: {
     type: Date,

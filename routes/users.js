@@ -6,6 +6,24 @@ const passport = require('passport');
 const User = require('../models/User');
 const { forwardAuthenticated } = require('../config/auth');
 
+let uuid_count=317018 ;
+async function getUuid(){
+  let latest_user=await User.findOne({"uuid": { $exists: true, $ne: null }}, {}, {
+              sort: {_id: -1}
+            })
+
+  if (latest_user) {
+    console.log(latest_user.uuid)
+    uuid_count= parseInt(latest_user.uuid,16) + 9
+    console.log('Count UUID : ' +uuid_count)
+
+  } else {
+    console.log('cant find lATEST USER UUID ')
+  }
+}
+getUuid()
+
+
 // Login Page
 router.get('/login', forwardAuthenticated, (req, res) => res.render('login'));
 
@@ -73,7 +91,8 @@ router.post('/register', (req, res) => {
               bcrypt.hash(newUser.password, salt, (err, hash) => {
                 if (err) throw err;
                 newUser.password = hash;
-
+                newUser.uuid= uuid_count.toString(16)
+                uuid_count=uuid_count + 9
                 console.log(newUser)
                 newUser
                   .save()
