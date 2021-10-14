@@ -215,7 +215,7 @@ async function findup30(user,selectedPackage,package_topay,package_reach){
                 uuid: user.uuid,
                 idu:  user._id,
                 income: share,
-                extra: "index:"+index+"/reach:"+upser.reach.down+"s:"+selectedPackage+package_topay,
+                extra: "index:"+index+"/reach:"+upuser.reach.down+"s:"+selectedPackage+package_topay,
                 
                 times:Date.now()
               }
@@ -227,6 +227,7 @@ async function findup30(user,selectedPackage,package_topay,package_reach){
       // going to check its down power for this method 
       if (upuser.reach.down <= index) {
         // changeit if not eligible
+        console.log('not eligible'+upuser.name)
         let cantget_update={ updateOne: {filter: {_id: upuser._id},
           update: {
             $inc: {
@@ -238,7 +239,7 @@ async function findup30(user,selectedPackage,package_topay,package_reach){
                 uuid: user.uuid,
                 idu:  user._id,
                 income: share,
-                extra: "index:"+index+"/reach:"+upser.reach.down+"s:"+selectedPackage+package_topay,
+                extra: "index:"+index+"/reach:"+upuser.reach.down+"s:"+selectedPackage+package_topay,
                 times:Date.now()
               }
             }
